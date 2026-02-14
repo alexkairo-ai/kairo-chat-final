@@ -1,0 +1,25 @@
+{
+  "name": "KAIRO Chat",
+  "short_name": "KAIRO",
+  "description": "Профессиональный онлайн-чат",
+  "theme_color": "#0f212e",
+  "background_color": "#0f212e",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/kairo-chat-final/",
+  "start_url": "/kairo-chat-final/",
+  "icons": [
+    {
+      "src": "/kairo-chat-final/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/kairo-chat-final/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
