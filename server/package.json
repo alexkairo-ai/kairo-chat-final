@@ -2,9 +2,9 @@
   "name": "server",
   "version": "1.0.0",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
-  },
+  "start": "node index.js",
+  "postinstall": "prisma generate"
+}
   "dependencies": {
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^2.4.3",
@@ -18,3 +18,4 @@
     "prisma": "^5.22.0"
   }
 }
+
