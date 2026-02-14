@@ -49,7 +49,7 @@ function Chat({ user, token, room }) {
   };
 
   return (
-    <div className="chat">
+    <div className="chat-area">
       <div className="chat-header">Комната: #{room}</div>
       <div className="messages">
         {messages.map((msg, i) => (
