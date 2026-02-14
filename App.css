@@ -1,0 +1,328 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #0b1c2f 0%, #1b2f44 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Общий контейнер приложения */
+.app {
+  width: 1300px;
+  max-width: 95vw;
+  height: 85vh;
+  background: #ffffff;
+  border-radius: 40px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+  display: flex;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Сайдбар */
+.sidebar {
+  width: 280px;
+  background: #0f212e;
+  color: #cbd5e0;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0;
+  border-right: 1px solid #1e3a4a;
+}
+
+.sidebar-header {
+  padding: 0 24px 24px;
+  border-bottom: 1px solid #1e3a4a;
+}
+
+.sidebar-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #ffd166, #f8b042);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+.user-greeting {
+  font-size: 14px;
+  color: #a0b8cc;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.room-list {
+  flex: 1;
+  padding: 16px 12px;
+}
+
+.room-item {
+  padding: 12px 16px;
+  margin-bottom: 6px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  color: #a0b8cc;
+  background: transparent;
+}
+
+.room-item:hover {
+  background: #1d3647;
+  color: #ffffff;
+  transform: translateX(4px);
+}
+
+.room-item.active {
+  background: #2c5f8a;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(44,95,138,0.4);
+}
+
+.logout-btn {
+  margin: 0 20px 20px;
+  padding: 14px;
+  background: transparent;
+  border: 1px solid #2c5f8a;
+  color: #a0b8cc;
+  border-radius: 60px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-btn:hover {
+  background: #2c5f8a;
+  color: #ffffff;
+  border-color: #2c5f8a;
+}
+
+/* Основная область чата */
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafd;
+}
+
+.chat-header {
+  padding: 24px 32px;
+  background: #ffffff;
+  border-bottom: 1px solid #e0e8f0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a2b3c;
+  letter-spacing: -0.2px;
+}
+
+.messages {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.message {
+  max-width: 60%;
+  padding: 16px 20px;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+  align-self: flex-start;
+  animation: slideIn 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  border: 1px solid #f0f4fa;
+}
+
+.message.own {
+  align-self: flex-end;
+  background: #1e3b4f;
+  color: #ffffff;
+  border: 1px solid #2b5068;
+}
+
+.message .user {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: #2c5f8a;
+}
+
+.message.own .user {
+  color: #b3d9ff;
+}
+
+.message .text {
+  word-wrap: break-word;
+  line-height: 1.5;
+  font-size: 15px;
+}
+
+.message .time {
+  font-size: 10px;
+  opacity: 0.5;
+  margin-top: 6px;
+  display: block;
+  text-align: right;
+}
+
+@keyframes slideIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Поле ввода */
+.input-area {
+  background: #ffffff;
+  padding: 24px 32px;
+  border-top: 1px solid #e0e8f0;
+  display: flex;
+  gap: 16px;
+}
+
+.input-area input {
+  flex: 1;
+  padding: 16px 24px;
+  border: 2px solid #d9e2ef;
+  border-radius: 60px;
+  font-size: 16px;
+  transition: all 0.2s;
+  background: #f8fafd;
+}
+
+.input-area input:focus {
+  outline: none;
+  border-color: #2c5f8a;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(44,95,138,0.1);
+}
+
+.input-area button {
+  padding: 16px 32px;
+  background: #2c5f8a;
+  color: #ffffff;
+  border: none;
+  border-radius: 60px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 8px 20px rgba(44,95,138,0.3);
+}
+
+.input-area button:hover {
+  background: #1e4b70;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(44,95,138,0.4);
+}
+
+/* Страница логина */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0b1c2f, #1b2f44);
+}
+
+.login-card {
+  background: #ffffff;
+  padding: 48px;
+  border-radius: 40px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+  width: 440px;
+  max-width: 90%;
+  text-align: center;
+}
+
+.login-card h1 {
+  font-size: 48px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1e3b4f, #2c5f8a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+.login-card .subtitle {
+  color: #5a748a;
+  margin-bottom: 40px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 16px 20px;
+  border: 2px solid #d9e2ef;
+  border-radius: 60px;
+  font-size: 16px;
+  transition: all 0.2s;
+  background: #f8fafd;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #2c5f8a;
+  box-shadow: 0 0 0 4px rgba(44,95,138,0.1);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 16px;
+  background: #2c5f8a;
+  color: white;
+  border: none;
+  border-radius: 60px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 8px 20px rgba(44,95,138,0.3);
+  margin-top: 20px;
+}
+
+.login-btn:hover {
+  background: #1e4b70;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(44,95,138,0.4);
+}
+
+.error {
+  color: #c44536;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.toggle {
+  margin-top: 24px;
+  color: #5a748a;
+  font-size: 14px;
+}
+
+.toggle button {
+  background: none;
+  border: none;
+  color: #2c5f8a;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 6px;
+  text-decoration: underline;
+}
