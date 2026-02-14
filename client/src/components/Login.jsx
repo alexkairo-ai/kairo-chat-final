@@ -32,13 +32,13 @@ function Login({ onLogin }) {
     <div className="login-container">
       <div className="login-card">
         <h1>KAIRO</h1>
-        <p className="subtitle">Professional Chat</p>
+        <p className="subtitle">Профессиональный чат</p>
         <form onSubmit={handleSubmit}>
           {isRegister && (
             <div className="input-group">
               <input
                 type="text"
-                placeholder="Username"
+                placeholder="Имя пользователя"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -48,7 +48,7 @@ function Login({ onLogin }) {
           <div className="input-group">
             <input
               type="email"
-              placeholder="Email"
+              placeholder="Электронная почта"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -57,7 +57,7 @@ function Login({ onLogin }) {
           <div className="input-group">
             <input
               type="password"
-              placeholder="Password"
+              placeholder="Пароль"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -65,13 +65,13 @@ function Login({ onLogin }) {
           </div>
           {error && <div className="error">{error}</div>}
           <button type="submit" className="login-btn">
-            {isRegister ? 'Sign Up' : 'Sign In'}
+            {isRegister ? 'Зарегистрироваться' : 'Войти'}
           </button>
         </form>
         <p className="toggle">
-          {isRegister ? 'Already have an account?' : "Don't have an account?"}
+          {isRegister ? 'Уже есть аккаунт?' : 'Нет аккаунта?'}
           <button onClick={() => setIsRegister(!isRegister)}>
-            {isRegister ? 'Sign In' : 'Sign Up'}
+            {isRegister ? 'Войти' : 'Создать'}
           </button>
         </p>
       </div>
