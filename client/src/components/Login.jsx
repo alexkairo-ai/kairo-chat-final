@@ -4,9 +4,12 @@ function Login({ onLogin }) {
   const [name, setName] = useState('');
 
   const handleSubmit = (e) => {
-    e.preventDefault();
-    if (name.trim()) onLogin({ name });
-  };
+  e.preventDefault();
+  if (name.trim()) {
+    localStorage.setItem('chatUserName', name);
+    onLogin({ name });
+  }
+};
 
   return (
     <form onSubmit={handleSubmit}>
@@ -23,3 +26,4 @@ function Login({ onLogin }) {
 }
 
 export default Login;
+
