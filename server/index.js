@@ -1,7 +1,7 @@
 const express = require('express');
-const cors = require('cors');
-const { Server } = require('socket.io');
 const http = require('http');
+const { Server } = require('socket.io');
+const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { PrismaClient } = require('@prisma/client');
@@ -18,10 +18,10 @@ const app = express();
 const server = http.createServer(app);
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// CORS для клиента (замените на свой домен GitHub Pages)
+// Разрешённые источники (CORS)
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://alexkairo-ai.github.io'
+  'https://alexkairo-ai.github.io' // ваш домен GitHub Pages
 ];
 
 const io = new Server(server, {
@@ -44,6 +44,7 @@ app.post('/api/register', async (req, res) => {
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Все поля обязательны' });
     }
+    // Проверка, существует ли пользователь
     const existing = await prisma.user.findFirst({
       where: { OR: [{ email }, { username }] },
     });
@@ -52,7 +53,7 @@ app.post('/api/register', async (req, res) => {
     }
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await prisma.user.create({
-      data: { username, email, passwordHash, name: username },
+      data: { username, email, passwordHash },
     });
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
     res.json({
@@ -111,9 +112,9 @@ app.get('/api/me', authenticate, async (req, res) => {
   }
 });
 
-// ==================== SOCKET.IO (Чат) с поддержкой токена ====================
-const socketUsers = new Map(); // socket.id -> { userId, username, room }
+// ==================== SOCKET.IO (Чат) ====================
 
+// Аутентификация сокета через токен
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) return next(new Error('Authentication error'));
@@ -138,7 +139,7 @@ io.on('connection', async (socket) => {
 
   socket.on('join', async ({ room }) => {
     socket.join(room);
-    socketUsers.set(socket.id, { userId: user.id, username: user.username, room });
+    socket.data = { userId: user.id, username: user.username, room };
 
     // Загружаем историю сообщений (последние 50)
     const messages = await prisma.message.findMany({
@@ -159,7 +160,7 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('message', async (text) => {
-    const socketUser = socketUsers.get(socket.id);
+    const socketUser = socket.data;
     if (!socketUser) return;
 
     const msg = await prisma.message.create({
@@ -180,10 +181,9 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('disconnect', () => {
-    const user = socketUsers.get(socket.id);
-    if (user) {
-      io.to(user.room).emit('user-left', `${user.username} покинул чат`);
-      socketUsers.delete(socket.id);
+    const socketUser = socket.data;
+    if (socketUser) {
+      io.to(socketUser.room).emit('user-left', `${socketUser.username} покинул чат`);
     }
   });
 });
