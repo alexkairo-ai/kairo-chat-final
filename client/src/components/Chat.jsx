@@ -1,34 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 
-const SERVER_URL = 'https://kairo-chat-final.onrender.com'; // замените на ваш URL от Render
+const SERVER_URL = 'https://kairo-chat-final.onrender.com';
 
-const socket = io(SERVER_URL);
-
-function Chat({ user, room }) {
+function Chat({ user, token, room }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
+  const socketRef = useRef(null);
 
   useEffect(() => {
-    socket.emit('join', { name: user.name, room });
+    socketRef.current = io(SERVER_URL, {
+      auth: { token },
+    });
 
-    socket.on('history', setMessages);
-    socket.on('message', (msg) => setMessages(prev => [...prev, msg]));
-    socket.on('user-joined', (msg) => {
-      setMessages(prev => [...prev, { id: Date.now(), user: 'Система', text: msg, time: new Date().toISOString() }]);
-    });
-    socket.on('user-left', (msg) => {
-      setMessages(prev => [...prev, { id: Date.now(), user: 'Система', text: msg, time: new Date().toISOString() }]);
-    });
+    socketRef.current.emit('join', { room });
+
+    socketRef.current.on('history', (msgs) => setMessages(msgs));
+    socketRef.current.on('message', (msg) =>
+      setMessages((prev) => [...prev, msg])
+    );
+    socketRef.current.on('user-joined', (msg) =>
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now(), user: 'System', text: msg, time: new Date() },
+      ])
+    );
+    socketRef.current.on('user-left', (msg) =>
+      setMessages((prev) => [
+        ...prev,
+        { id: Date.now(), user: 'System', text: msg, time: new Date() },
+      ])
+    );
 
     return () => {
-      socket.off('history');
-      socket.off('message');
-      socket.off('user-joined');
-      socket.off('user-left');
+      socketRef.current.disconnect();
     };
-  }, [room, user.name]);
+  }, [room, token]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -36,31 +44,40 @@ function Chat({ user, room }) {
 
   const sendMessage = () => {
     if (!input.trim()) return;
-    socket.emit('message', input);
+    socketRef.current.emit('message', input);
     setInput('');
   };
 
   return (
-    <div>
-      <div style={{ border: '1px solid #ccc', height: '300px', overflowY: 'scroll', padding: '10px' }}>
+    <div className="chat">
+      <div className="chat-header">Room: #{room}</div>
+      <div className="messages">
         {messages.map((msg, i) => (
-          <div key={msg.id || i}>
-            <b>{msg.user}:</b> {msg.text} <small>{new Date(msg.time).toLocaleTimeString()}</small>
+          <div
+            key={msg.id || i}
+            className={`message ${msg.user === user.username ? 'own' : ''}`}
+          >
+            <div className="user">{msg.user}</div>
+          <div className="text">{msg.text}</div>
+            <div className="time">
+              {new Date(msg.time).toLocaleTimeString()}
+            </div>
           </div>
         ))}
         <div ref={messagesEndRef} />
       </div>
-      <input
-        type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-        style={{ width: '80%' }}
-      />
-      <button onClick={sendMessage}>Отправить</button>
+      <div className="input-area">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+          placeholder="Type a message..."
+        />
+        <button onClick={sendMessage}>Send</button>
+      </div>
     </div>
   );
 }
 
 export default Chat;
-
