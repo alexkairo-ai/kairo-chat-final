@@ -15,7 +15,6 @@ body {
   min-height: 100vh;
 }
 
-/* Общий контейнер приложения */
 .app {
   width: 1300px;
   max-width: 95vw;
@@ -29,7 +28,6 @@ body {
   border: 1px solid rgba(255,255,255,0.1);
 }
 
-/* Сайдбар */
 .sidebar {
   width: 280px;
   background: #0f212e;
@@ -109,7 +107,6 @@ body {
   border-color: #2c5f8a;
 }
 
-/* Основная область чата */
 .chat-area {
   flex: 1;
   display: flex;
@@ -184,7 +181,6 @@ body {
   100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Поле ввода */
 .input-area {
   background: #ffffff;
   padding: 24px 32px;
@@ -229,7 +225,7 @@ body {
   box-shadow: 0 12px 28px rgba(44,95,138,0.4);
 }
 
-/* Страница логина */
+/* Login styles */
 .login-container {
   display: flex;
   justify-content: center;
@@ -325,4 +321,231 @@ body {
   cursor: pointer;
   margin-left: 6px;
   text-decoration: underline;
+}
+
+/* Friends section */
+.friends-section {
+  padding: 16px;
+  border-top: 1px solid #1e3a4a;
+  background: #0f212e;
+  color: #cbd5e0;
+}
+
+.friends-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.friends-tabs button {
+  flex: 1;
+  padding: 8px;
+  background: #1d3647;
+  border: none;
+  color: #a0b8cc;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.friends-tabs button.active {
+  background: #2c5f8a;
+  color: white;
+}
+
+.friend-item, .request-item, .search-result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #1d3647;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.friend-name {
+  font-weight: 600;
+}
+
+.request-actions button, .search-result-item button {
+  background: #2c5f8a;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 4px 10px;
+  margin-left: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.request-actions button:first-child {
+  background: #27ae60;
+}
+
+.request-actions button:last-child {
+  background: #c0392b;
+}
+
+.search-section input {
+  width: 100%;
+  padding: 10px;
+  background: #1d3647;
+  border: 1px solid #2a4a6a;
+  color: white;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.search-section input::placeholder {
+  color: #6f8ca0;
+}
+
+/* Адаптация для мобильных устройств */
+@media (max-width: 768px) {
+  .app {
+    flex-direction: column;
+    height: 100vh;
+    max-width: 100%;
+    border-radius: 0;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    padding: 12px 0;
+    border-right: none;
+    border-bottom: 1px solid #1e3a4a;
+  }
+
+  .sidebar-header {
+    padding: 0 16px 16px;
+  }
+
+  .sidebar-header h1 {
+    font-size: 24px;
+  }
+
+  .user-greeting {
+    font-size: 12px;
+  }
+
+  .room-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 16px;
+  }
+
+  .room-item {
+    flex: 1 1 auto;
+    min-width: 80px;
+    text-align: center;
+    padding: 10px 8px;
+    margin-bottom: 0;
+  }
+
+  .logout-btn {
+    margin: 0 16px 16px;
+    padding: 12px;
+  }
+
+  .chat-area {
+    height: calc(100vh - 240px); /* подберите под ваш сайдбар */
+  }
+
+  .chat-header {
+    padding: 16px 20px;
+    font-size: 16px;
+  }
+
+  .messages {
+    padding: 20px;
+  }
+
+  .message {
+    max-width: 85%;
+    padding: 12px 16px;
+  }
+
+  .input-area {
+    padding: 16px 20px;
+  }
+
+  .input-area input {
+    padding: 12px 16px;
+    font-size: 16px;
+  }
+
+  .input-area button {
+    padding: 12px 20px;
+    font-size: 16px;
+  }
+
+  .friends-section {
+    padding: 12px;
+  }
+
+  .friends-tabs button {
+    font-size: 14px;
+    padding: 8px 4px;
+  }
+
+  .friend-item, .request-item, .search-result-item {
+    padding: 10px;
+  }
+
+  .login-card {
+    padding: 32px 24px;
+    border-radius: 28px;
+  }
+
+  .login-card h1 {
+    font-size: 36px;
+  }
+
+  .login-card .subtitle {
+    font-size: 14px;
+  }
+
+  .input-group input {
+    padding: 14px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .room-item {
+    min-width: 60px;
+    font-size: 14px;
+    padding: 8px 4px;
+  }
+
+  .message {
+    max-width: 90%;
+    font-size: 14px;
+  }
+
+  .input-area input {
+    padding: 10px 14px;
+  }
+
+  .input-area button {
+    padding: 10px 16px;
+  }
+
+  .friends-tabs {
+    flex-wrap: wrap;
+  }
+
+  .friends-tabs button {
+    flex: 1 0 30%;
+  }
+
+  .login-card {
+    padding: 24px 16px;
+  }
+
+  .login-card h1 {
+    font-size: 32px;
+  }
 }
