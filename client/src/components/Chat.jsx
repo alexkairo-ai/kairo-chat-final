@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import io from 'socket.io-client';
 
-const SERVER_URL = 'https://kairo-chat-server.onrender.com'; // замените на ваш URL от Render
+const SERVER_URL = 'https://kairo-chat-final.onrender.com'; // замените на ваш URL от Render
 
 const socket = io(SERVER_URL);
 
@@ -63,3 +63,4 @@ function Chat({ user, room }) {
 }
 
 export default Chat;
+
