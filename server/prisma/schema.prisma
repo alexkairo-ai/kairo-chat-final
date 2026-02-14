@@ -14,6 +14,8 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
   messages     Message[]
+  sentRequests  Friend[] @relation("sender")    // отправленные запросы дружбы
+  receivedRequests Friend[] @relation("receiver") // полученные запросы
 }
 
 model Message {
@@ -23,4 +25,18 @@ model Message {
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model Friend {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  status     String   // "pending", "accepted", "rejected"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  sender   User @relation("sender", fields: [senderId], references: [id])
+  receiver User @relation("receiver", fields: [receiverId], references: [id])
+
+  @@unique([senderId, receiverId])
 }
