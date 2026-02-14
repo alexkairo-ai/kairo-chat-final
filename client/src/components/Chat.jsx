@@ -23,13 +23,13 @@ function Chat({ user, token, room }) {
     socketRef.current.on('user-joined', (msg) =>
       setMessages((prev) => [
         ...prev,
-        { id: Date.now(), user: 'System', text: msg, time: new Date() },
+        { id: Date.now(), user: 'Система', text: msg, time: new Date() },
       ])
     );
     socketRef.current.on('user-left', (msg) =>
       setMessages((prev) => [
         ...prev,
-        { id: Date.now(), user: 'System', text: msg, time: new Date() },
+        { id: Date.now(), user: 'Система', text: msg, time: new Date() },
       ])
     );
 
@@ -50,7 +50,7 @@ function Chat({ user, token, room }) {
 
   return (
     <div className="chat">
-      <div className="chat-header">Room: #{room}</div>
+      <div className="chat-header">Комната: #{room}</div>
       <div className="messages">
         {messages.map((msg, i) => (
           <div
@@ -58,7 +58,7 @@ function Chat({ user, token, room }) {
             className={`message ${msg.user === user.username ? 'own' : ''}`}
           >
             <div className="user">{msg.user}</div>
-          <div className="text">{msg.text}</div>
+            <div className="text">{msg.text}</div>
             <div className="time">
               {new Date(msg.time).toLocaleTimeString()}
             </div>
@@ -72,9 +72,9 @@ function Chat({ user, token, room }) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-          placeholder="Type a message..."
+          placeholder="Введите сообщение..."
         />
-        <button onClick={sendMessage}>Send</button>
+        <button onClick={sendMessage}>Отправить</button>
       </div>
     </div>
   );
