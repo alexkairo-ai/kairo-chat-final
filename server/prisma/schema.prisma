@@ -13,13 +13,23 @@ model User {
   email        String   @unique
   passwordHash String
   createdAt    DateTime @default(now())
-  messages     Message[]
+
+  // Друзья (через Friend)
   sentRequests  Friend[] @relation("sender")
   receivedRequests Friend[] @relation("receiver")
+
+  // Группы, в которых состоит
   groupMembers GroupMember[]
-  ownedGroups  Group[] @relation("owner")
+
+  // Личные сообщения (как отправитель или получатель)
+  sentMessages  PrivateMessage[] @relation("sender")
+  receivedMessages PrivateMessage[] @relation("receiver")
+
+  // Сообщения в группах
+  groupMessages GroupMessage[]
 }
 
+// Дружба
 model Friend {
   id         Int      @id @default(autoincrement())
   senderId   Int
@@ -40,18 +50,17 @@ model Group {
   name        String        @unique
   description String?
   ownerId     Int
-  owner       User          @relation("owner", fields: [ownerId], references: [id])
+  owner       User          @relation(fields: [ownerId], references: [id])
   members     GroupMember[]
   messages    GroupMessage[]
   createdAt   DateTime      @default(now())
 }
 
-// Участники группы
 model GroupMember {
   id        Int      @id @default(autoincrement())
   groupId   Int
   userId    Int
-  role      String   @default("member") // "owner", "admin", "member"
+  role      String   @default("member")
   joinedAt  DateTime @default(now())
 
   group Group @relation(fields: [groupId], references: [id])
@@ -60,17 +69,27 @@ model GroupMember {
   @@unique([groupId, userId])
 }
 
-// Сообщения в группах
 model GroupMessage {
   id        Int      @id @default(autoincrement())
   groupId   Int
   userId    Int
   text      String
   createdAt DateTime @default(now())
-
+  // Статусы прочтения – можно сделать отдельную модель, но для простоты пока без
   group Group @relation(fields: [groupId], references: [id])
   user  User  @relation(fields: [userId], references: [id])
 }
 
-// Личные сообщения (как вариант, можно использовать отдельную модель, но проще создать для каждой пары друзей группу из двух человек)
-// Для простоты оставим пока только групповые сообщения, а личные будем реализовывать как группу с двумя участниками.
+// Личные сообщения (private messages)
+model PrivateMessage {
+  id         Int      @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  text       String
+  status     String   @default("sent") // "sent", "delivered", "read"
+  createdAt  DateTime @default(now())
+  readAt     DateTime?
+
+  sender   User @relation("sender", fields: [senderId], references: [id])
+  receiver User @relation("receiver", fields: [receiverId], references: [id])
+}
