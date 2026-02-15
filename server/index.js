@@ -18,7 +18,6 @@ const app = express();
 const server = http.createServer(app);
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 
-// Разрешённые источники (CORS)
 const allowedOrigins = [
   'http://localhost:5173',
   'https://alexkairo-ai.github.io'
@@ -37,7 +36,6 @@ app.use(express.json());
 
 // ==================== REST API ====================
 
-// Регистрация
 app.post('/api/register', async (req, res) => {
   try {
     const { username, email, password } = req.body;
@@ -65,7 +63,6 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Вход
 app.post('/api/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -84,7 +81,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Middleware для проверки токена
 const authenticate = (req, res, next) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: 'Требуется авторизация' });
@@ -98,7 +94,6 @@ const authenticate = (req, res, next) => {
   }
 };
 
-// Получение данных текущего пользователя
 app.get('/api/me', authenticate, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
@@ -111,9 +106,7 @@ app.get('/api/me', authenticate, async (req, res) => {
   }
 });
 
-// ==================== ЭНДПОИНТЫ ДЛЯ ДРУЗЕЙ ====================
-
-// Поиск пользователей по никнейму
+// ==================== Друзья (как ранее) ====================
 app.get('/api/users/search', authenticate, async (req, res) => {
   try {
     const { q } = req.query;
@@ -133,7 +126,6 @@ app.get('/api/users/search', authenticate, async (req, res) => {
   }
 });
 
-// Отправка запроса в друзья
 app.post('/api/friends/request', authenticate, async (req, res) => {
   try {
     const { username } = req.body;
@@ -166,7 +158,6 @@ app.post('/api/friends/request', authenticate, async (req, res) => {
   }
 });
 
-// Список друзей
 app.get('/api/friends', authenticate, async (req, res) => {
   try {
     const friends = await prisma.friend.findMany({
@@ -191,7 +182,6 @@ app.get('/api/friends', authenticate, async (req, res) => {
   }
 });
 
-// Входящие запросы
 app.get('/api/friends/requests', authenticate, async (req, res) => {
   try {
     const requests = await prisma.friend.findMany({
@@ -205,10 +195,9 @@ app.get('/api/friends/requests', authenticate, async (req, res) => {
   }
 });
 
-// Принять/отклонить запрос
 app.put('/api/friends/respond/:id', authenticate, async (req, res) => {
   try {
-    const { status } = req.body; // 'accepted' или 'rejected'
+    const { status } = req.body;
     const senderId = parseInt(req.params.id);
     const friend = await prisma.friend.findFirst({
       where: {
@@ -230,9 +219,7 @@ app.put('/api/friends/respond/:id', authenticate, async (req, res) => {
   }
 });
 
-// ==================== ЭНДПОИНТЫ ДЛЯ ГРУПП ====================
-
-// Создать группу
+// ==================== Группы (как ранее) ====================
 app.post('/api/groups', authenticate, async (req, res) => {
   try {
     const { name, description } = req.body;
@@ -260,7 +247,6 @@ app.post('/api/groups', authenticate, async (req, res) => {
   }
 });
 
-// Получить группы пользователя
 app.get('/api/groups', authenticate, async (req, res) => {
   try {
     const memberships = await prisma.groupMember.findMany({
@@ -275,7 +261,6 @@ app.get('/api/groups', authenticate, async (req, res) => {
   }
 });
 
-// Поиск групп по названию
 app.get('/api/groups/search', authenticate, async (req, res) => {
   try {
     const { q } = req.query;
@@ -293,7 +278,6 @@ app.get('/api/groups/search', authenticate, async (req, res) => {
   }
 });
 
-// Присоединиться к группе
 app.post('/api/groups/:groupId/join', authenticate, async (req, res) => {
   try {
     const groupId = parseInt(req.params.groupId);
@@ -319,7 +303,6 @@ app.post('/api/groups/:groupId/join', authenticate, async (req, res) => {
   }
 });
 
-// Получить сообщения группы
 app.get('/api/groups/:groupId/messages', authenticate, async (req, res) => {
   try {
     const groupId = parseInt(req.params.groupId);
@@ -341,8 +324,106 @@ app.get('/api/groups/:groupId/messages', authenticate, async (req, res) => {
   }
 });
 
-// ==================== SOCKET.IO (Чат) ====================
+// ==================== НОВЫЕ ЭНДПОИНТЫ ДЛЯ ЛИЧНЫХ СООБЩЕНИЙ ====================
 
+// Получить список друзей с количеством непрочитанных сообщений
+app.get('/api/friends-with-unread', authenticate, async (req, res) => {
+  try {
+    const friends = await prisma.friend.findMany({
+      where: {
+        OR: [
+          { senderId: req.userId, status: 'accepted' },
+          { receiverId: req.userId, status: 'accepted' }
+        ]
+      },
+      include: {
+        sender: { select: { id: true, username: true } },
+        receiver: { select: { id: true, username: true } }
+      }
+    });
+    const friendsList = friends.map(f => 
+      f.senderId === req.userId ? f.receiver : f.sender
+    );
+
+    // Для каждого друга считаем непрочитанные сообщения, где получатель – текущий пользователь
+    const friendsWithUnread = await Promise.all(friendsList.map(async (friend) => {
+      const unreadCount = await prisma.privateMessage.count({
+        where: {
+          senderId: friend.id,
+          receiverId: req.userId,
+          status: { not: 'read' }
+        }
+      });
+      return { ...friend, unreadCount };
+    }));
+    res.json(friendsWithUnread);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+// Получить историю личных сообщений с другом
+app.get('/api/messages/:friendId', authenticate, async (req, res) => {
+  try {
+    const friendId = parseInt(req.params.friendId);
+    const messages = await prisma.privateMessage.findMany({
+      where: {
+        OR: [
+          { senderId: req.userId, receiverId: friendId },
+          { senderId: friendId, receiverId: req.userId }
+        ]
+      },
+      orderBy: { createdAt: 'asc' },
+      take: 50,
+    });
+    res.json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+// Отметить сообщения как прочитанные (когда открыт чат)
+app.put('/api/messages/read/:friendId', authenticate, async (req, res) => {
+  try {
+    const friendId = parseInt(req.params.friendId);
+    await prisma.privateMessage.updateMany({
+      where: {
+        senderId: friendId,
+        receiverId: req.userId,
+        status: { not: 'read' }
+      },
+      data: { status: 'read', readAt: new Date() }
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+// ==================== УДАЛЕНИЕ АККАУНТА ====================
+app.delete('/api/user', authenticate, async (req, res) => {
+  try {
+    // Удаляем все связанные данные (сообщения, дружбу, членство в группах)
+    await prisma.privateMessage.deleteMany({
+      where: { OR: [{ senderId: req.userId }, { receiverId: req.userId }] }
+    });
+    await prisma.groupMessage.deleteMany({ where: { userId: req.userId } });
+    await prisma.groupMember.deleteMany({ where: { userId: req.userId } });
+    await prisma.friend.deleteMany({
+      where: { OR: [{ senderId: req.userId }, { receiverId: req.userId }] }
+    });
+    await prisma.user.delete({ where: { id: req.userId } });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+// ==================== SOCKET.IO ====================
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) return next(new Error('Authentication error'));
@@ -357,81 +438,58 @@ io.use((socket, next) => {
 
 io.on('connection', async (socket) => {
   console.log('✅ Подключился:', socket.id);
-
   const user = await prisma.user.findUnique({
     where: { id: socket.userId },
     select: { id: true, username: true },
   });
   if (!user) return socket.disconnect();
 
-  socket.on('join', async ({ room }) => {
-    socket.join(room);
-    socket.data = { userId: user.id, username: user.username, room };
+  // Присоединяем к комнате пользователя (для личных уведомлений)
+  socket.join(`user:${user.id}`);
 
-    let messages = [];
-    if (room.startsWith('group:')) {
-      const groupId = parseInt(room.split(':')[1]);
-      messages = await prisma.groupMessage.findMany({
-        where: { groupId },
-        orderBy: { createdAt: 'asc' },
-        take: 50,
-        include: { user: { select: { username: true } } }
-      });
-    } else if (room.startsWith('private:')) {
-      // Личные сообщения можно хранить в отдельной модели, но для простоты пока используем память
-      // либо можно создать модель PrivateMessage. Пока оставим историю в памяти (не сохраняется)
-      // Но лучше добавить модель PrivateMessage. Для экономии времени предлагаю пока не сохранять историю личных сообщений.
-      messages = []; // в будущем можно заменить на запрос к БД
-    }
-
-    socket.emit('history', messages.map(msg => ({
-      id: msg.id,
-      user: msg.user.username,
-      text: msg.text,
-      time: msg.createdAt,
-    })));
-
-    socket.to(room).emit('user-joined', `${user.username} вошёл в чат`);
+  // Обработка личных сообщений
+  socket.on('private-message', async ({ receiverId, text }) => {
+    const message = await prisma.privateMessage.create({
+      data: {
+        senderId: user.id,
+        receiverId,
+        text,
+        status: 'sent'
+      }
+    });
+    // Отправляем отправителю с временным id и статусом
+    socket.emit('private-message', { ...message, tempId: Date.now() });
+    // Отправляем получателю, если он онлайн
+    io.to(`user:${receiverId}`).emit('private-message', message);
   });
 
-  socket.on('message', async (text) => {
-    const socketUser = socket.data;
-    if (!socketUser) return;
-
-    let savedMsg;
-    if (socketUser.room.startsWith('group:')) {
-      const groupId = parseInt(socketUser.room.split(':')[1]);
-      savedMsg = await prisma.groupMessage.create({
-        data: {
-          groupId,
-          userId: socketUser.userId,
-          text,
-        },
-        include: { user: { select: { username: true } } }
-      });
-    } else if (socketUser.room.startsWith('private:')) {
-      // Пока не сохраняем личные сообщения
-      savedMsg = {
-        id: Date.now(),
-        user: { username: socketUser.username },
-        text,
-        createdAt: new Date(),
-      };
-    }
-
-    io.to(socketUser.room).emit('message', {
-      id: savedMsg.id,
-      user: savedMsg.user.username,
-      text: savedMsg.text,
-      time: savedMsg.createdAt,
+  // Когда сообщение доставлено (клиент получил) – можно обновить статус
+  socket.on('message-delivered', async ({ messageId }) => {
+    await prisma.privateMessage.update({
+      where: { id: messageId },
+      data: { status: 'delivered' }
     });
+    // Уведомить отправителя об изменении статуса
+    const message = await prisma.privateMessage.findUnique({ where: { id: messageId } });
+    if (message) {
+      io.to(`user:${message.senderId}`).emit('message-status', { id: messageId, status: 'delivered' });
+    }
+  });
+
+  // Когда сообщение прочитано
+  socket.on('message-read', async ({ messageId }) => {
+    await prisma.privateMessage.update({
+      where: { id: messageId },
+      data: { status: 'read', readAt: new Date() }
+    });
+    const message = await prisma.privateMessage.findUnique({ where: { id: messageId } });
+    if (message) {
+      io.to(`user:${message.senderId}`).emit('message-status', { id: messageId, status: 'read' });
+    }
   });
 
   socket.on('disconnect', () => {
-    const socketUser = socket.data;
-    if (socketUser) {
-      io.to(socketUser.room).emit('user-left', `${socketUser.username} покинул чат`);
-    }
+    console.log('❌ Отключился:', socket.id);
   });
 });
 
