@@ -41,9 +41,21 @@ function ChatWindow({ user, token, friend, onBack }) {
       setMessages(prev => prev.map(m => m.id === id ? { ...m, status } : m));
     });
 
+    // Обработка редактирования сообщения
+    socket.on('message-updated', (updatedMsg) => {
+      setMessages(prev => prev.map(m => m.id === updatedMsg.id ? updatedMsg : m));
+    });
+
+    // Обработка удаления сообщения
+    socket.on('message-deleted', (deletedId) => {
+      setMessages(prev => prev.filter(m => m.id !== deletedId));
+    });
+
     return () => {
       socket.off('private-message');
       socket.off('message-status');
+      socket.off('message-updated');
+      socket.off('message-deleted');
     };
   }, [friend.id, token]);
 
@@ -58,6 +70,39 @@ function ChatWindow({ user, token, friend, onBack }) {
     setInput('');
   };
 
+  const handleEditMessage = async (messageId, newText) => {
+    try {
+      const res = await fetch(`${SERVER_URL}/api/messages/${messageId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ text: newText })
+      });
+      if (!res.ok) throw new Error('Ошибка редактирования');
+      const updated = await res.json();
+      setMessages(prev => prev.map(m => m.id === messageId ? updated : m));
+    } catch (err) {
+      console.error(err);
+      alert('Не удалось отредактировать сообщение');
+    }
+  };
+
+  const handleDeleteMessage = async (messageId) => {
+    try {
+      const res = await fetch(`${SERVER_URL}/api/messages/${messageId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error('Ошибка удаления');
+      setMessages(prev => prev.filter(m => m.id !== messageId));
+    } catch (err) {
+      console.error(err);
+      alert('Не удалось удалить сообщение');
+    }
+  };
+
   return (
     <div className="chat-window">
       <div className="chat-header">
@@ -70,6 +115,8 @@ function ChatWindow({ user, token, friend, onBack }) {
             key={msg.id}
             message={msg}
             isOwn={msg.senderId === user.id}
+            onEdit={handleEditMessage}
+            onDelete={handleDeleteMessage}
           />
         ))}
         <div ref={messagesEndRef} />
