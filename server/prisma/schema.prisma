@@ -28,8 +28,8 @@ model User {
   // Сообщения в группах
   groupMessages GroupMessage[]
 
-  // 👇 Новая строка: группы, которыми пользователь владеет (обратная связь для Group.owner)
-  ownedGroups  Group[] @relation("owner")
+  // Группы, которыми пользователь владеет (обратная связь для Group.owner)
+  ownedGroups  Group[]
 }
 
 // Дружба
@@ -78,7 +78,6 @@ model GroupMessage {
   userId    Int
   text      String
   createdAt DateTime @default(now())
-  // Статусы прочтения – можно сделать отдельную модель, но для простоты пока без
   group Group @relation(fields: [groupId], references: [id])
   user  User  @relation(fields: [userId], references: [id])
 }
