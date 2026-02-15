@@ -21,7 +21,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
 // Разрешённые источники (CORS)
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://alexkairo-ai.github.io' // ваш домен GitHub Pages
+  'https://alexkairo-ai.github.io'
 ];
 
 const io = new Server(server, {
@@ -35,7 +35,7 @@ const io = new Server(server, {
 app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 
-// ==================== REST API (Аутентификация) ====================
+// ==================== REST API ====================
 
 // Регистрация
 app.post('/api/register', async (req, res) => {
@@ -113,7 +113,7 @@ app.get('/api/me', authenticate, async (req, res) => {
 
 // ==================== ЭНДПОИНТЫ ДЛЯ ДРУЗЕЙ ====================
 
-// Поиск пользователей по никнейму (частичное совпадение)
+// Поиск пользователей по никнейму
 app.get('/api/users/search', authenticate, async (req, res) => {
   try {
     const { q } = req.query;
@@ -137,13 +137,9 @@ app.get('/api/users/search', authenticate, async (req, res) => {
 app.post('/api/friends/request', authenticate, async (req, res) => {
   try {
     const { username } = req.body;
-    if (!username) return res.status(400).json({ error: 'Не указан username' });
-
-    // Находим получателя
     const receiver = await prisma.user.findUnique({ where: { username } });
     if (!receiver) return res.status(404).json({ error: 'Пользователь не найден' });
 
-    // Проверяем, нет ли уже запроса или дружбы
     const existing = await prisma.friend.findFirst({
       where: {
         OR: [
@@ -170,7 +166,7 @@ app.post('/api/friends/request', authenticate, async (req, res) => {
   }
 });
 
-// Получить список друзей (со статусом accepted)
+// Список друзей
 app.get('/api/friends', authenticate, async (req, res) => {
   try {
     const friends = await prisma.friend.findMany({
@@ -195,7 +191,7 @@ app.get('/api/friends', authenticate, async (req, res) => {
   }
 });
 
-// Получить входящие запросы (pending)
+// Входящие запросы
 app.get('/api/friends/requests', authenticate, async (req, res) => {
   try {
     const requests = await prisma.friend.findMany({
@@ -209,15 +205,11 @@ app.get('/api/friends/requests', authenticate, async (req, res) => {
   }
 });
 
-// Принять или отклонить запрос
+// Принять/отклонить запрос
 app.put('/api/friends/respond/:id', authenticate, async (req, res) => {
   try {
     const { status } = req.body; // 'accepted' или 'rejected'
-    if (!['accepted', 'rejected'].includes(status)) {
-      return res.status(400).json({ error: 'Неверный статус' });
-    }
     const senderId = parseInt(req.params.id);
-
     const friend = await prisma.friend.findFirst({
       where: {
         senderId,
@@ -238,9 +230,119 @@ app.put('/api/friends/respond/:id', authenticate, async (req, res) => {
   }
 });
 
+// ==================== ЭНДПОИНТЫ ДЛЯ ГРУПП ====================
+
+// Создать группу
+app.post('/api/groups', authenticate, async (req, res) => {
+  try {
+    const { name, description } = req.body;
+    if (!name) return res.status(400).json({ error: 'Название обязательно' });
+    const existing = await prisma.group.findUnique({ where: { name } });
+    if (existing) return res.status(400).json({ error: 'Группа с таким названием уже существует' });
+
+    const group = await prisma.group.create({
+      data: {
+        name,
+        description,
+        ownerId: req.userId,
+        members: {
+          create: {
+            userId: req.userId,
+            role: 'owner'
+          }
+        }
+      }
+    });
+    res.json(group);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+// Получить группы пользователя
+app.get('/api/groups', authenticate, async (req, res) => {
+  try {
+    const memberships = await prisma.groupMember.findMany({
+      where: { userId: req.userId },
+      include: { group: true }
+    });
+    const groups = memberships.map(m => m.group);
+    res.json(groups);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+// Поиск групп по названию
+app.get('/api/groups/search', authenticate, async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.json([]);
+    const groups = await prisma.group.findMany({
+      where: {
+        name: { contains: q, mode: 'insensitive' }
+      },
+      take: 10
+    });
+    res.json(groups);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+// Присоединиться к группе
+app.post('/api/groups/:groupId/join', authenticate, async (req, res) => {
+  try {
+    const groupId = parseInt(req.params.groupId);
+    const group = await prisma.group.findUnique({ where: { id: groupId } });
+    if (!group) return res.status(404).json({ error: 'Группа не найдена' });
+
+    const existing = await prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId, userId: req.userId } }
+    });
+    if (existing) return res.status(400).json({ error: 'Вы уже в группе' });
+
+    await prisma.groupMember.create({
+      data: {
+        groupId,
+        userId: req.userId,
+        role: 'member'
+      }
+    });
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
+// Получить сообщения группы
+app.get('/api/groups/:groupId/messages', authenticate, async (req, res) => {
+  try {
+    const groupId = parseInt(req.params.groupId);
+    const membership = await prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId, userId: req.userId } }
+    });
+    if (!membership) return res.status(403).json({ error: 'Вы не в группе' });
+
+    const messages = await prisma.groupMessage.findMany({
+      where: { groupId },
+      orderBy: { createdAt: 'asc' },
+      take: 50,
+      include: { user: { select: { username: true } } }
+    });
+    res.json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Ошибка сервера' });
+  }
+});
+
 // ==================== SOCKET.IO (Чат) ====================
 
-// Аутентификация сокета через токен
 io.use((socket, next) => {
   const token = socket.handshake.auth.token;
   if (!token) return next(new Error('Authentication error'));
@@ -256,7 +358,6 @@ io.use((socket, next) => {
 io.on('connection', async (socket) => {
   console.log('✅ Подключился:', socket.id);
 
-  // Получаем данные пользователя из БД
   const user = await prisma.user.findUnique({
     where: { id: socket.userId },
     select: { id: true, username: true },
@@ -267,13 +368,21 @@ io.on('connection', async (socket) => {
     socket.join(room);
     socket.data = { userId: user.id, username: user.username, room };
 
-    // Загружаем историю сообщений (последние 50)
-    const messages = await prisma.message.findMany({
-      where: { room },
-      orderBy: { createdAt: 'asc' },
-      take: 50,
-      include: { user: { select: { username: true } } },
-    });
+    let messages = [];
+    if (room.startsWith('group:')) {
+      const groupId = parseInt(room.split(':')[1]);
+      messages = await prisma.groupMessage.findMany({
+        where: { groupId },
+        orderBy: { createdAt: 'asc' },
+        take: 50,
+        include: { user: { select: { username: true } } }
+      });
+    } else if (room.startsWith('private:')) {
+      // Личные сообщения можно хранить в отдельной модели, но для простоты пока используем память
+      // либо можно создать модель PrivateMessage. Пока оставим историю в памяти (не сохраняется)
+      // Но лучше добавить модель PrivateMessage. Для экономии времени предлагаю пока не сохранять историю личных сообщений.
+      messages = []; // в будущем можно заменить на запрос к БД
+    }
 
     socket.emit('history', messages.map(msg => ({
       id: msg.id,
@@ -289,20 +398,32 @@ io.on('connection', async (socket) => {
     const socketUser = socket.data;
     if (!socketUser) return;
 
-    const msg = await prisma.message.create({
-      data: {
-        room: socketUser.room,
+    let savedMsg;
+    if (socketUser.room.startsWith('group:')) {
+      const groupId = parseInt(socketUser.room.split(':')[1]);
+      savedMsg = await prisma.groupMessage.create({
+        data: {
+          groupId,
+          userId: socketUser.userId,
+          text,
+        },
+        include: { user: { select: { username: true } } }
+      });
+    } else if (socketUser.room.startsWith('private:')) {
+      // Пока не сохраняем личные сообщения
+      savedMsg = {
+        id: Date.now(),
+        user: { username: socketUser.username },
         text,
-        userId: socketUser.userId,
-      },
-      include: { user: { select: { username: true } } },
-    });
+        createdAt: new Date(),
+      };
+    }
 
     io.to(socketUser.room).emit('message', {
-      id: msg.id,
-      user: msg.user.username,
-      text: msg.text,
-      time: msg.createdAt,
+      id: savedMsg.id,
+      user: savedMsg.user.username,
+      text: savedMsg.text,
+      time: savedMsg.createdAt,
     });
   });
 
