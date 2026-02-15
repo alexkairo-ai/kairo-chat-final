@@ -6,7 +6,7 @@ function Message({ message, isOwn }) {
     switch (message.status) {
       case 'sent': return '✓';
       case 'delivered': return '✓✓';
-      case 'read': return '✓✓';
+      case 'read': return '✓✓'; // для read можно использовать синий цвет или двойную галочку
       default: return '✓';
     }
   };
