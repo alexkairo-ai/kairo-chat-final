@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const SERVER_URL = 'https://kairo-chat-final.onrender.com';
 
-function Friends({ token }) {
+function Friends({ token, onSelectFriend }) {
   const [tab, setTab] = useState('friends'); // 'friends', 'requests', 'search'
   const [friends, setFriends] = useState([]);
   const [requests, setRequests] = useState([]);
@@ -86,7 +86,7 @@ function Friends({ token }) {
       {tab === 'friends' && (
         <div className="friends-list">
           {friends.map(f => (
-            <div key={f.id} className="friend-item">
+            <div key={f.id} className="friend-item" onClick={() => onSelectFriend(f)}>
               <span className="friend-name">{f.username}</span>
             </div>
           ))}
