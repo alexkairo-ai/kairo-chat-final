@@ -1,50 +1,34 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { initSocket, getSocket } from '../utils/socket';
 import Message from './Message';
 
 const SERVER_URL = 'https://kairo-chat-final.onrender.com';
 
-function ChatWindow({ user, token }) {
-  const { friendId } = useParams();
-  const navigate = useNavigate();
+function ChatWindow({ user, token, friend, onBack }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [friend, setFriend] = useState(null);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
     const socket = initSocket(token);
 
-    // Загружаем историю
-    fetch(`${SERVER_URL}/api/messages/${friendId}`, {
+    // Загружаем историю сообщений с другом
+    fetch(`${SERVER_URL}/api/messages/${friend.id}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
       .then(data => setMessages(data));
 
-    // Получаем информацию о друге
-    fetch(`${SERVER_URL}/api/users/search?q=`, { // можно улучшить
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(res => res.json())
-      .then(users => {
-        const f = users.find(u => u.id === parseInt(friendId));
-        setFriend(f);
-      });
-
-    // Отмечаем сообщения как прочитанные
-    fetch(`${SERVER_URL}/api/messages/read/${friendId}`, {
+    // Отмечаем как прочитанные
+    fetch(`${SERVER_URL}/api/messages/read/${friend.id}`, {
       method: 'PUT',
       headers: { Authorization: `Bearer ${token}` }
     });
 
-    // Слушаем новые сообщения
     socket.on('private-message', (msg) => {
-      if (msg.senderId === parseInt(friendId) || msg.receiverId === parseInt(friendId)) {
+      if (msg.senderId === friend.id || msg.receiverId === friend.id) {
         setMessages(prev => [...prev, msg]);
-        // Если сообщение от друга, отмечаем как прочитанное
-        if (msg.senderId === parseInt(friendId)) {
+        if (msg.senderId === friend.id) {
           socket.emit('message-read', { messageId: msg.id });
         }
       }
@@ -58,7 +42,7 @@ function ChatWindow({ user, token }) {
       socket.off('private-message');
       socket.off('message-status');
     };
-  }, [friendId, token]);
+  }, [friend.id, token]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,16 +51,14 @@ function ChatWindow({ user, token }) {
   const sendMessage = () => {
     if (!input.trim()) return;
     const socket = getSocket();
-    socket.emit('private-message', { receiverId: parseInt(friendId), text: input });
+    socket.emit('private-message', { receiverId: friend.id, text: input });
     setInput('');
   };
-
-  if (!friend) return <div>Загрузка...</div>;
 
   return (
     <div className="chat-window">
       <div className="chat-header">
-        <button className="back-button" onClick={() => navigate('/')}>←</button>
+        <button className="back-button" onClick={onBack}>←</button>
         <h2>{friend.username}</h2>
       </div>
       <div className="messages-container">
