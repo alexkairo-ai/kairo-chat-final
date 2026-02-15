@@ -10,6 +10,8 @@ export const initSocket = (token) => {
       auth: { token },
       transports: ['websocket'],
     });
+    socket.on('connect', () => console.log('Socket connected'));
+    socket.on('connect_error', (err) => console.error('Socket error', err));
   }
   return socket;
 };
