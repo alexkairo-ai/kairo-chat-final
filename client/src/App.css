@@ -6,15 +6,22 @@
   box-sizing: border-box;
 }
 
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden; /* внешний скролл отключён */
+}
+
 body {
   font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #0b1c2f 0%, #1b2f44 100%);
+  background: #0f212e; /* единый цвет фона – как у сайдбара */
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
+  overscroll-behavior: none; /* убираем резиновый эффект на мобильных */
 }
 
+/* Десктопная версия */
 .app {
   width: 1300px;
   max-width: 95vw;
@@ -29,13 +36,68 @@ body {
   border: 1px solid rgba(255,255,255,0.1);
 }
 
+/* Мобильные стили (до 768px) */
+@media (max-width: 768px) {
+  .app {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    backdrop-filter: none;
+    border: none;
+  }
+
+  .chat-header {
+    display: flex !important;
+    align-items: center !important;
+    background: #0f212e !important;
+    color: white !important;
+    padding: 12px 16px !important;
+  }
+
+  .back-button {
+    display: inline-block !important;
+    color: #ffd166 !important;
+    font-size: 24px !important;
+    margin-right: 16px !important;
+    background: none !important;
+    border: none !important;
+    cursor: pointer !important;
+  }
+
+  .chat-header h2 {
+    color: white !important;
+    font-size: 18px !important;
+    margin: 0 !important;
+  }
+
+  .friend-item, .group-item {
+    background: #1d3647 !important;
+    color: white !important;
+  }
+
+  .message {
+    max-width: 85%;
+  }
+
+  .message.own {
+    background-color: #1e3b4f !important;
+    color: white !important;
+  }
+
+  .message .user {
+    color: #b3d9ff !important;
+  }
+}
+
 /* Login styles */
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0b1c2f, #1b2f44);
+  background: #0f212e;
 }
 
 .login-card {
