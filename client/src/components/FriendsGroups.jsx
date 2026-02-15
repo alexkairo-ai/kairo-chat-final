@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Menu from './Menu';
-import { useNavigate } from 'react-router-dom'; // нужен react-router-dom
 
 const SERVER_URL = 'https://kairo-chat-final.onrender.com';
 
-function FriendsGroups({ user, token, onLogout }) {
+function FriendsGroups({ user, token, onLogout, onSelectFriend }) {
   const [friends, setFriends] = useState([]);
   const [groups, setGroups] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState({ users: [], groups: [] });
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchFriends();
@@ -44,10 +42,9 @@ function FriendsGroups({ user, token, onLogout }) {
   const handleSearch = async (query) => {
     setSearchQuery(query);
     if (!query) {
-      setSearchResults([]);
+      setSearchResults({ users: [], groups: [] });
       return;
     }
-    // Поиск пользователей и групп
     try {
       const [usersRes, groupsRes] = await Promise.all([
         fetch(`${SERVER_URL}/api/users/search?q=${query}`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -92,14 +89,14 @@ function FriendsGroups({ user, token, onLogout }) {
       {searchQuery ? (
         <div className="search-results">
           <h3>Пользователи</h3>
-          {searchResults.users?.map(u => (
-            <div key={u.id} className="search-item" onClick={() => navigate(`/chat/${u.id}`)}>
+          {searchResults.users.map(u => (
+            <div key={u.id} className="search-item" onClick={() => onSelectFriend(u)}>
               {u.username}
             </div>
           ))}
           <h3>Группы</h3>
-          {searchResults.groups?.map(g => (
-            <div key={g.id} className="search-item" onClick={() => navigate(`/group/${g.id}`)}>
+          {searchResults.groups.map(g => (
+            <div key={g.id} className="search-item" onClick={() => alert('Групповой чат пока не реализован')}>
               {g.name}
             </div>
           ))}
@@ -109,7 +106,7 @@ function FriendsGroups({ user, token, onLogout }) {
           <div className="friends-list">
             <h2>Друзья</h2>
             {friends.map(f => (
-              <div key={f.id} className="friend-item" onClick={() => navigate(`/chat/${f.id}`)}>
+              <div key={f.id} className="friend-item" onClick={() => onSelectFriend(f)}>
                 <span>{f.username}</span>
                 {f.unreadCount > 0 && <span className="unread-badge">{f.unreadCount}</span>}
               </div>
@@ -119,7 +116,7 @@ function FriendsGroups({ user, token, onLogout }) {
           <div className="groups-list">
             <h2>Группы</h2>
             {groups.map(g => (
-              <div key={g.id} className="group-item" onClick={() => navigate(`/group/${g.id}`)}>
+              <div key={g.id} className="group-item" onClick={() => alert('Групповой чат пока не реализован')}>
                 {g.name}
               </div>
             ))}
