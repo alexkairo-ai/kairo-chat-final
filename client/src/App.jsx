@@ -1,5 +1,4 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import Login from './components/Login';
 import FriendsGroups from './components/FriendsGroups';
@@ -8,6 +7,8 @@ import './App.css';
 
 function App() {
   const { user, token, loading, login, logout } = useAuth();
+  const [view, setView] = useState('friends'); // 'friends' или 'chat'
+  const [selectedFriend, setSelectedFriend] = useState(null); // объект друга для чата
 
   if (loading) return <div>Загрузка...</div>;
 
@@ -15,14 +16,37 @@ function App() {
     return <Login onLogin={login} />;
   }
 
+  // Переход в чат с другом
+  const openChat = (friend) => {
+    setSelectedFriend(friend);
+    setView('chat');
+  };
+
+  // Возврат к списку друзей/групп
+  const closeChat = () => {
+    setView('friends');
+    setSelectedFriend(null);
+  };
+
   return (
-    <BrowserRouter basename="/kairo-chat-final">
-      <Routes>
-        <Route path="/" element={<FriendsGroups user={user} token={token} onLogout={logout} />} />
-        <Route path="/chat/:friendId" element={<ChatWindow user={user} token={token} />} />
-        <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
-    </BrowserRouter>
+    <div className="app">
+      {view === 'friends' && (
+        <FriendsGroups
+          user={user}
+          token={token}
+          onLogout={logout}
+          onSelectFriend={openChat}
+        />
+      )}
+      {view === 'chat' && selectedFriend && (
+        <ChatWindow
+          user={user}
+          token={token}
+          friend={selectedFriend}
+          onBack={closeChat}
+        />
+      )}
+    </div>
   );
 }
 
