@@ -14,30 +14,20 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
 
-  // Друзья (через Friend)
   sentRequests  Friend[] @relation("sender")
   receivedRequests Friend[] @relation("receiver")
-
-  // Группы, в которых состоит
   groupMembers GroupMember[]
-
-  // Личные сообщения (как отправитель или получатель)
   sentMessages  PrivateMessage[] @relation("sender")
   receivedMessages PrivateMessage[] @relation("receiver")
-
-  // Сообщения в группах
   groupMessages GroupMessage[]
-
-  // Группы, которыми пользователь владеет (обратная связь для Group.owner)
   ownedGroups  Group[]
 }
 
-// Дружба
 model Friend {
   id         Int      @id @default(autoincrement())
   senderId   Int
   receiverId Int
-  status     String   // "pending", "accepted", "rejected"
+  status     String
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -47,7 +37,6 @@ model Friend {
   @@unique([senderId, receiverId])
 }
 
-// Группы
 model Group {
   id          Int           @id @default(autoincrement())
   name        String        @unique
@@ -78,11 +67,11 @@ model GroupMessage {
   userId    Int
   text      String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt  // для отслеживания редактирования
   group Group @relation(fields: [groupId], references: [id])
   user  User  @relation(fields: [userId], references: [id])
 }
 
-// Личные сообщения (private messages)
 model PrivateMessage {
   id         Int      @id @default(autoincrement())
   senderId   Int
@@ -90,6 +79,7 @@ model PrivateMessage {
   text       String
   status     String   @default("sent") // "sent", "delivered", "read"
   createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt  // для отслеживания редактирования
   readAt     DateTime?
 
   sender   User @relation("sender", fields: [senderId], references: [id])
