@@ -1,4 +1,131 @@
-/* ... существующие стили ... */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: linear-gradient(135deg, #0b1c2f 0%, #1b2f44 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.app {
+  width: 1300px;
+  max-width: 95vw;
+  height: 85vh;
+  background: #ffffff;
+  border-radius: 40px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.4);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Login styles */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0b1c2f, #1b2f44);
+}
+
+.login-card {
+  background: #ffffff;
+  padding: 48px;
+  border-radius: 40px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+  width: 440px;
+  max-width: 90%;
+  text-align: center;
+}
+
+.login-card h1 {
+  font-size: 48px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1e3b4f, #2c5f8a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+
+.login-card .subtitle {
+  color: #5a748a;
+  margin-bottom: 40px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 16px 20px;
+  border: 2px solid #d9e2ef;
+  border-radius: 60px;
+  font-size: 16px;
+  transition: all 0.2s;
+  background: #f8fafd;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #2c5f8a;
+  box-shadow: 0 0 0 4px rgba(44,95,138,0.1);
+}
+
+.login-btn {
+  width: 100%;
+  padding: 16px;
+  background: #2c5f8a;
+  color: white;
+  border: none;
+  border-radius: 60px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 8px 20px rgba(44,95,138,0.3);
+  margin-top: 20px;
+}
+
+.login-btn:hover {
+  background: #1e4b70;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(44,95,138,0.4);
+}
+
+.error {
+  color: #c44536;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.toggle {
+  margin-top: 24px;
+  color: #5a748a;
+  font-size: 14px;
+}
+
+.toggle button {
+  background: none;
+  border: none;
+  color: #2c5f8a;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 6px;
+  text-decoration: underline;
+}
 
 /* Бургер-меню */
 .menu-button {
