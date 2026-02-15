@@ -12,24 +12,27 @@ function ChatWindow({ user, token, friend, onBack }) {
   useEffect(() => {
     const socket = initSocket(token);
 
-    // Загружаем историю сообщений с другом
     fetch(`${SERVER_URL}/api/messages/${friend.id}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
-      .then(data => setMessages(data));
-
-    // Отмечаем как прочитанные
-    fetch(`${SERVER_URL}/api/messages/read/${friend.id}`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` }
-    });
+      .then(data => {
+        setMessages(data);
+        fetch(`${SERVER_URL}/api/messages/read/${friend.id}`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      });
 
     socket.on('private-message', (msg) => {
       if (msg.senderId === friend.id || msg.receiverId === friend.id) {
         setMessages(prev => [...prev, msg]);
         if (msg.senderId === friend.id) {
           socket.emit('message-read', { messageId: msg.id });
+          fetch(`${SERVER_URL}/api/messages/read/${friend.id}`, {
+            method: 'PUT',
+            headers: { Authorization: `Bearer ${token}` }
+          });
         }
       }
     });
