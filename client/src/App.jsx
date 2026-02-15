@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import Chat from './components/Chat';
 import Login from './components/Login';
-import RoomList from './components/RoomList';
+import Groups from './components/Groups';
 import Friends from './components/Friends';
 import './App.css';
 
 function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
-  const [currentRoom, setCurrentRoom] = useState('general');
-  const [activeTab, setActiveTab] = useState('chat'); // 'chat' или 'friends' для мобильной навигации
+  const [currentGroup, setCurrentGroup] = useState(null);
+  const [activeTab, setActiveTab] = useState('groups'); // 'groups', 'friends'
 
   useEffect(() => {
     if (token) {
@@ -46,7 +46,6 @@ function App() {
 
   return (
     <div className="app">
-      {/* Верхняя панель с профилем и выходом (только для мобильных) */}
       <div className="mobile-header">
         <div className="mobile-header-left">
           <span className="mobile-username">{user.username}</span>
@@ -54,42 +53,56 @@ function App() {
         <button className="mobile-logout" onClick={handleLogout}>Выйти</button>
       </div>
 
-      {/* Основной контент */}
       <div className="main-content">
-        {/* Десктопная боковая панель (скрыта на мобильных) */}
         <div className="sidebar">
           <div className="sidebar-header">
             <h1>KAIRO</h1>
             <p className="user-greeting">{user.username}</p>
           </div>
-          <RoomList currentRoom={currentRoom} onRoomChange={setCurrentRoom} />
-          <Friends token={token} />
-          <button className="logout-btn" onClick={handleLogout}>Выйти</button>
+          <div className="sidebar-tabs">
+            <button
+              className={`sidebar-tab ${activeTab === 'groups' ? 'active' : ''}`}
+              onClick={() => setActiveTab('groups')}
+            >
+              Группы
+            </button>
+            <button
+              className={`sidebar-tab ${activeTab === 'friends' ? 'active' : ''}`}
+              onClick={() => setActiveTab('friends')}
+            >
+              Друзья
+            </button>
+          </div>
+          {activeTab === 'groups' ? (
+            <Groups token={token} onSelectGroup={setCurrentGroup} currentGroup={currentGroup} />
+          ) : (
+            <Friends token={token} onSelectFriend={(friend) => {
+              setCurrentGroup({ type: 'private', friend });
+            }} />
+          )}
         </div>
 
-        {/* Мобильное содержимое: либо чат, либо друзья */}
-        <div className="mobile-content">
-          {activeTab === 'chat' ? (
-            <Chat user={user} token={token} room={currentRoom} />
+        <div className="chat-area">
+          {currentGroup ? (
+            <Chat user={user} token={token} group={currentGroup} />
           ) : (
-            <Friends token={token} />
+            <div className="no-chat-message">Выберите группу или друга для начала общения</div>
           )}
         </div>
       </div>
 
-      {/* Нижняя навигация для мобильных */}
       <div className="mobile-nav">
         <button
-          className={`mobile-nav-item ${activeTab === 'chat' ? 'active' : ''}`}
-          onClick={() => setActiveTab('chat')}
+          className={`mobile-nav-item ${activeTab === 'groups' ? 'active' : ''}`}
+          onClick={() => setActiveTab('groups')}
         >
-          💬 Чат
+          👥 Группы
         </button>
         <button
           className={`mobile-nav-item ${activeTab === 'friends' ? 'active' : ''}`}
           onClick={() => setActiveTab('friends')}
         >
-          👥 Друзья
+          👤 Друзья
         </button>
       </div>
     </div>
