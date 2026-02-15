@@ -14,17 +14,10 @@ model User {
   passwordHash String
   createdAt    DateTime @default(now())
   messages     Message[]
-  sentRequests  Friend[] @relation("sender")    // отправленные запросы дружбы
-  receivedRequests Friend[] @relation("receiver") // полученные запросы
-}
-
-model Message {
-  id        Int      @id @default(autoincrement())
-  room      String
-  text      String
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
+  sentRequests  Friend[] @relation("sender")
+  receivedRequests Friend[] @relation("receiver")
+  groupMembers GroupMember[]
+  ownedGroups  Group[] @relation("owner")
 }
 
 model Friend {
@@ -40,3 +33,44 @@ model Friend {
 
   @@unique([senderId, receiverId])
 }
+
+// Группы
+model Group {
+  id          Int           @id @default(autoincrement())
+  name        String        @unique
+  description String?
+  ownerId     Int
+  owner       User          @relation("owner", fields: [ownerId], references: [id])
+  members     GroupMember[]
+  messages    GroupMessage[]
+  createdAt   DateTime      @default(now())
+}
+
+// Участники группы
+model GroupMember {
+  id        Int      @id @default(autoincrement())
+  groupId   Int
+  userId    Int
+  role      String   @default("member") // "owner", "admin", "member"
+  joinedAt  DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([groupId, userId])
+}
+
+// Сообщения в группах
+model GroupMessage {
+  id        Int      @id @default(autoincrement())
+  groupId   Int
+  userId    Int
+  text      String
+  createdAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+}
+
+// Личные сообщения (как вариант, можно использовать отдельную модель, но проще создать для каждой пары друзей группу из двух человек)
+// Для простоты оставим пока только групповые сообщения, а личные будем реализовывать как группу с двумя участниками.
