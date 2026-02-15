@@ -3,7 +3,7 @@ import io from 'socket.io-client';
 
 const SERVER_URL = 'https://kairo-chat-final.onrender.com';
 
-function Chat({ user, token, room }) {
+function Chat({ user, token, group }) {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef(null);
@@ -14,6 +14,7 @@ function Chat({ user, token, room }) {
       auth: { token },
     });
 
+    const room = group.type === 'group' ? `group:${group.id}` : `private:${user.id}-${group.friend.id}`;
     socketRef.current.emit('join', { room });
 
     socketRef.current.on('history', (msgs) => setMessages(msgs));
@@ -36,7 +37,7 @@ function Chat({ user, token, room }) {
     return () => {
       socketRef.current.disconnect();
     };
-  }, [room, token]);
+  }, [group, token, user.id, user.username]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -48,9 +49,14 @@ function Chat({ user, token, room }) {
     setInput('');
   };
 
+  const getHeaderText = () => {
+    if (group.type === 'group') return `Группа: ${group.name}`;
+    return `Личный чат с ${group.friend.username}`;
+  };
+
   return (
     <div className="chat-area">
-      <div className="chat-header">Комната: #{room}</div>
+      <div className="chat-header">{getHeaderText()}</div>
       <div className="messages">
         {messages.map((msg, i) => (
           <div
